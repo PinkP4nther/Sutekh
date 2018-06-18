@@ -1,8 +1,9 @@
 # Sutekh
 An example rootkit that gives a root shell
+Built for kernel 4.x.x
 
 [INSTALL]
-1. Install latest linux headers for your kernel. Example (debian): [apt install linux-headers-$(uname -r)]
+1. Install latest Linux headers for your kernel. Example (debian): [apt install linux-headers-$(uname -r)]
 2. $ git clone 
 3. $ cd Sutekh && make
 4. $ gcc getroot.c -o getroot
