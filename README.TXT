@@ -6,9 +6,9 @@ An example rootkit that gives a root shell
 2. $ git clone 
 3. $ cd Sutekh && make
 4. $ gcc getroot.c -o getroot
+5. $ sudo insmod sutekh.ko
 
 [Run]
-$ sudo insmod sutekh.ko
 $ ./getroot
 
 [Output example]
