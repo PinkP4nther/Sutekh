@@ -1,5 +1,5 @@
 # Sutekh
-An example rootkit that gives a root shell
+An example rootkit that gives a userland process root permissions
 Built for Linux kernel 4.x.x x86_64
 
 [INSTALL]
