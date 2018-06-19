@@ -1,4 +1,4 @@
-/* An example rootkit that gives a rootshell to a userland process */
+/* An example rootkit that gives a root shell to a userland process */
 
 #include <asm/unistd.h>
 #include <asm/cacheflush.h>
