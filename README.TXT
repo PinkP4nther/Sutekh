@@ -4,7 +4,7 @@ Built for Linux kernel 4.x.x x86_64
 
 [INSTALL]
 1. Install latest Linux headers for your kernel. Example (debian): [apt install linux-headers-$(uname -r)]
-2. $ git clone 
+2. $ git clone https://github.com/PinkP4nther/Sutekh
 3. $ cd Sutekh && make
 4. $ gcc getroot.c -o getroot
 5. $ sudo insmod sutekh.ko
