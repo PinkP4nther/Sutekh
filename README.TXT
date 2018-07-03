@@ -1,6 +1,6 @@
 # Sutekh
 An example rootkit that gives a userland process root permissions
-Built for Linux kernel 4.x.x x86_64
+Built for Linux kernel 4.16.5 x86_64
 
 [INSTALL]
 1. Install latest Linux headers for your kernel. Example (debian): [apt install linux-headers-$(uname -r)]
