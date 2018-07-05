@@ -18,7 +18,7 @@
 #define ML "GPL"
 #define MV "1.0"
 
-/* Sycall table address */
+/* Syscall table address */
 void **sct_address;
 
 /* Set sys_call_table address to sct_address */
